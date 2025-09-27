@@ -8,18 +8,27 @@ import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { Suspense } from "react";
 import { LoadingState } from "@/components/loading-state";
 import { AgentsListHeader } from "@/modules/agents/ui/components/list-header";
+import { SearchParams } from "nuqs";
+import { loadSearchParams } from "@/modules/agents/params";
 
-const Page = async () => {
+interface Props {
+  searchParams: Promise<SearchParams>;
+}
+
+const Page = async ({ searchParams }: Props) => {
+  const filters = await loadSearchParams(searchParams);
 
   const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-  
-    if (!session) {
-      redirect("/sign-in");
-    }
+    headers: await headers(),
+  });
+
+  if (!session) {
+    redirect("/sign-in");
+  }
   const queryClinet = getQueryClient();
-  await queryClinet.prefetchQuery(trpc.agents.getMany.queryOptions());
+  await queryClinet.prefetchQuery(
+    trpc.agents.getMany.queryOptions({ ...filters })
+  );
 
   return (
     <>
